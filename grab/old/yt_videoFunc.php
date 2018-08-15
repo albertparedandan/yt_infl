@@ -16,6 +16,7 @@ function videosListMultipleIds($service, $part, $params, &$return)
     );
 
     for ($i = 0; @$response['items'][$i]['statistics']['viewCount'] != null; ++$i) {
+        print_r($response['items'][$i]['snippet']['categoryId']);
         array_push(
             $return,
             array(
@@ -37,6 +38,9 @@ function videosListMultipleIds($service, $part, $params, &$return)
 }
 function getVideo($array)
 {
+    if (empty($array[0])) {
+        return;
+    }
     global $service;
     $videoList = [];
     for ($i = 0; $i < count($array); ++$i) {

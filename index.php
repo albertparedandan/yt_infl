@@ -12,10 +12,22 @@ try {
 
     // Get channelID
     $youtubeID = readline("Enter YouTube Channel ID: ");
-    $data = getUser($youtubeID);
+    if (!$youtubeID) {
+        die ("No youtubeID inserted\n");
+    }
+    $sql = $conn->prepare("
+    SELECT ytId
+    FROM yt_user
+    WHERE ytId = :id
+    ");
+    $sql->execute(array(':id' => $youtubeID));
+    $check = $sql->fetchAll(PDO::FETCH_ASSOC);
+    if (!$check) {
+
+        $data = getUser($youtubeID);
     // $videos = getVideos ($youtubeID);
     // insert data to sql table
-    $sql = $conn->prepare("INSERT INTO yt_user 
+        $sql = $conn->prepare("INSERT INTO yt_user 
             (
                 `ytId`,
                 `channelName`,
@@ -46,21 +58,20 @@ try {
                 '" . $data[11] . "'
             )
         ");
-    $sql->execute(array(
-        ':bio' => $data[2]
-    ));
+        $sql->execute(array(
+            ':bio' => $data[2]
+        ));
     //$video_list is an array with key 'id' and value = all the uploaded videoId of $youtubeId seperated by ','
-    $video_list = getVideoId($data[9]);
+        $video_list = getVideoId($data[9]);
 
     // $result is a 2D array, it contains x amount of videos and each $result[x] has data of the video
-    $result = getVideo($video_list);
-
+        $result = getVideo($video_list);
+        if ($result) {
     //save last insert Id
-    $db_ytId = $conn->lastInsertId();
+            $db_ytId = $conn->lastInsertId();
 
-    for ($i = 0; $i<count($result); ++$i)
-    {    
-        $vid = $conn->prepare("INSERT INTO yt_video 
+            for ($i = 0; $i < count($result); ++$i) {
+                $vid = $conn->prepare("INSERT INTO yt_video 
             (
                 `ytId`,
                 `yt_videoId`,
@@ -93,17 +104,18 @@ try {
                 '" . $result[$i]['categId'] . "'
             )
         ");
-        $vid->execute(array
-            (
-                ':title' => $result[$i]['videoTitle'],
-                ':descr' => $result[$i]['description'],
-                ':tag' => $result[$i]['tags']
-            )
-        );
+                $vid->execute(array(
+                    ':title' => $result[$i]['videoTitle'],
+                    ':descr' => $result[$i]['description'],
+                    ':tag' => $result[$i]['tags']
+                ));
+            }
+        }
+
+        echo "Success\n";
+    } else {
+        die("Error! Channel Exists\n");
     }
-
-    echo "Success\n";
-
 
 } catch (PDOException $e) {
     echo "Failed: " . $e->getMessage() . "\n";
