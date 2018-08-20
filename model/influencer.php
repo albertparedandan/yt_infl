@@ -437,6 +437,90 @@ class Influencer extends CoreModel
 							cat.id = :catId
 						GROUP BY inf.id ORDER BY inf.infPower DESC, followerCount DESC Limit ".$limit;
 			$socialId = 0;
+		} elseif ($socialType == "YT") {
+			$socialId = $this->yt_id;
+			$sql = "SELECT  inf.id AS influencerId,
+							ide.id AS identityId,
+							inf.name AS name,
+							ytu.subscriberCount AS followerCount,
+							inf.profilePic,
+							ytu.infPower AS rating,
+							cat.id AS categoryId
+						FROM influencer AS inf
+						INNER JOIN influencer_interest AS infi ON infi.influencerId = inf.id
+						INNER JOIN category_interest AS cati ON cati.interestId = infi.interestId
+						INNER JOIN category AS cat ON cat.id = cati.categoryId
+						INNER JOIN identity AS ide ON ide.id = inf.identityId
+						INNER JOIN yt_user AS ytu ON ytu.id = inf.yt_user_id
+						INNER JOIN location AS loc ON loc.id = inf.locationId
+						WHERE
+							loc.id = :locId AND
+							cat.id = :catId
+						GROUP BY inf.id ORDER BY ytu.infPower DESC, ytu.subscriberCount DESC Limit ".$limit;
+		} elseif ($socialType == "IGYT") {
+			$sql = "SELECT  inf.id AS influencerId,
+							ide.id AS identityId,
+							inf.name AS name,
+							(IFNULL(ytu.subscriberCount,0) + IFNULL(igu.followerCount, 0)) AS followerCount,
+							inf.profilePic,
+							inf.infPower AS rating,
+							cat.id AS categoryId
+						FROM influencer AS inf
+						INNER JOIN influencer_interest AS infi ON infi.influencerId = inf.id
+						INNER JOIN category_interest AS cati ON cati.interestId = infi.interestId
+						INNER JOIN category AS cat ON cat.id = cati.categoryId
+						INNER JOIN identity AS ide ON ide.id = inf.identityId
+						LEFT JOIN ig_user AS igu ON igu.id = inf.ig_user_id
+						LEFT JOIN yt_user AS ytu ON ytu.id = inf.yt_user_id
+						INNER JOIN location AS loc ON loc.id = inf.locationId
+						WHERE
+							loc.id = :locId AND
+							cat.id = :catId
+						GROUP BY inf.id ORDER BY inf.infPower DESC, followerCount DESC Limit ".$limit;
+			$socialId = 0;
+		} elseif ($socialType == "FBYT") {
+			$sql = "SELECT  inf.id AS influencerId,
+							ide.id AS identityId,
+							inf.name AS name,
+							(IFNULL(fbu.fanCount,0) + IFNULL(ytu.subscriberCount, 0)) AS followerCount,
+							inf.profilePic,
+							inf.infPower AS rating,
+							cat.id AS categoryId
+						FROM influencer AS inf
+						INNER JOIN influencer_interest AS infi ON infi.influencerId = inf.id
+						INNER JOIN category_interest AS cati ON cati.interestId = infi.interestId
+						INNER JOIN category AS cat ON cat.id = cati.categoryId
+						INNER JOIN identity AS ide ON ide.id = inf.identityId
+						LEFT JOIN yt_user AS ytu ON ytu.id = inf.yt_user_id
+						LEFT JOIN fb_user AS fbu ON fbu.id = inf.fb_user_id
+						INNER JOIN location AS loc ON loc.id = inf.locationId
+						WHERE
+							loc.id = :locId AND
+							cat.id = :catId
+						GROUP BY inf.id ORDER BY inf.infPower DESC, followerCount DESC Limit ".$limit;
+			$socialId = 0;
+		} elseif ($socialType == "IGFBYT") {
+			$sql = "SELECT  inf.id AS influencerId,
+							ide.id AS identityId,
+							inf.name AS name,
+							(IFNULL(fbu.fanCount,0) + IFNULL(ytu.subscriberCount, 0) + IFNULL(igu.followerCount)) AS followerCount,
+							inf.profilePic,
+							inf.infPower AS rating,
+							cat.id AS categoryId
+						FROM influencer AS inf
+						INNER JOIN influencer_interest AS infi ON infi.influencerId = inf.id
+						INNER JOIN category_interest AS cati ON cati.interestId = infi.interestId
+						INNER JOIN category AS cat ON cat.id = cati.categoryId
+						INNER JOIN identity AS ide ON ide.id = inf.identityId
+						LEFT JOIN ig_user AS igu ON igu.id = inf.ig_user_id
+						LEFT JOIN yt_user AS ytu ON ytu.id = inf.yt_user_id
+						LEFT JOIN fb_user AS fbu ON fbu.id = inf.fb_user_id
+						INNER JOIN location AS loc ON loc.id = inf.locationId
+						WHERE
+							loc.id = :locId AND
+							cat.id = :catId
+						GROUP BY inf.id ORDER BY inf.infPower DESC, followerCount DESC Limit ".$limit;
+			$socialId = 0;
 		}
 		$topInfluencers = $this->db->readQuery($sql, [':locId' => $loc_id, ':catId'=>$cat_id]);
 		//echo $sql."\n";
@@ -522,6 +606,74 @@ class Influencer extends CoreModel
 							loc.id = :locId AND
 							ide.id = :identityId
 						ORDER BY inf.infPower DESC, followerCount DESC Limit ".$limit;
+			$socialId = 0;
+		} elseif ($socialType == "YT") {
+			$socialId = $this->yt_id;
+			$sql = "SELECT 	inf.id AS influencerId,
+							ide.id AS identityId,
+							inf.name AS name,
+							ytu.subscriberCount AS followerCount,
+							inf.profilePic,
+							ytu.infPower As rating
+						FROM influencer AS inf
+						INNER JOIN identity AS ide ON ide.id = inf.identityId
+						INNER JOIN yt_user AS ytu ON ytu.id = inf.yt_user_id
+						INNER JOIN location AS loc ON loc.id = inf.locationId
+						WHERE
+							loc.id = :locId AND
+							ide.id = :identityId
+						ORDER BY ytu.infPower DESC, ytu.subscriberCount DESC Limit ".$limit;
+		} elseif ($socialType == "IGYT") {
+			$sql = "SELECT 	inf.id AS influencerId,
+						ide.id AS identityId,
+						inf.name AS name,
+						(IFNULL(ytu.subscriberCount,0) + IFNULL(igu.followerCount, 0)) AS followerCount,
+						inf.profilePic,
+						inf.infPower As rating
+					FROM influencer AS inf
+					INNER JOIN identity AS ide ON ide.id = inf.identityId
+					LEFT JOIN ig_user AS igu ON igu.id = inf.ig_user_id
+					LEFT JOIN yt_user AS ytu ON ytu.id = inf.yt_user_id
+					INNER JOIN location AS loc ON loc.id = inf.locationId
+					WHERE
+						loc.id = :locId AND
+						ide.id = :identityId
+					ORDER BY inf.infPower DESC, followerCount DESC Limit ".$limit;
+			$socialId = 0;
+		} elseif ($socialType == "FBYT") {
+			$sql = "SELECT 	inf.id AS influencerId,
+						ide.id AS identityId,
+						inf.name AS name,
+						(IFNULL(ytu.subscriberCount,0) + IFNULL(fbu.fanCount, 0)) AS followerCount,
+						inf.profilePic,
+						inf.infPower As rating
+					FROM influencer AS inf
+					INNER JOIN identity AS ide ON ide.id = inf.identityId
+					LEFT JOIN fb_user AS fbu ON fbu.id = inf.fb_user_id
+					LEFT JOIN yt_user AS ytu ON ytu.id = inf.yt_user_id
+					INNER JOIN location AS loc ON loc.id = inf.locationId
+					WHERE
+						loc.id = :locId AND
+						ide.id = :identityId
+					ORDER BY inf.infPower DESC, followerCount DESC Limit ".$limit;
+			$socialId = 0;
+		} elseif ($socialType == "IGFBYT") {
+			$sql = "SELECT 	inf.id AS influencerId,
+						ide.id AS identityId,
+						inf.name AS name,
+						(IFNULL(ytu.subscriberCount,0) + IFNULL(fbu.fanCount, 0) + IFNULL(igu.followerCount, 0)) AS followerCount,
+						inf.profilePic,
+						inf.infPower As rating
+					FROM influencer AS inf
+					INNER JOIN identity AS ide ON ide.id = inf.identityId
+					LEFT JOIN ig_user AS igu ON igu.id = inf.ig_user_id
+					LEFT JOIN fb_user AS fbu ON fbu.id = inf.fb_user_id
+					LEFT JOIN yt_user AS ytu ON ytu.id = inf.yt_user_id
+					INNER JOIN location AS loc ON loc.id = inf.locationId
+					WHERE
+						loc.id = :locId AND
+						ide.id = :identityId
+					ORDER BY inf.infPower DESC, followerCount DESC Limit ".$limit;
 			$socialId = 0;
 		}
 		$topInfluencers = $this->db->readQuery($sql, [':locId'=>$loc_id, ':identityId'=>$identity_id]);
@@ -706,6 +858,17 @@ class Influencer extends CoreModel
 					igpop.postDate >= :postDate 
 					GROUP BY igpop.fb_user_id ORDER BY igpop.score DESC, igpop.likeCount DESC LIMIT ".$limit;
 
+		} elseif ($type == 'YT') {
+			$sql = "SELECT igpop.yt_video_id, igpop.yt_user_id, igpop.score, loc.id AS locationId, inf.id AS influencerId,
+					igpop.content, igpop.likeCount, igpop.commentCount, igpop.dislikeCount, igpop.pictureUrl, igpop.postDate
+					FROM yt_latest_post AS igpop
+					INNER JOIN yt_user AS igu ON igu.id = igpop.yt_user_id
+					INNER JOIN influencer as inf ON inf.yt_user_id = igu.id
+					INNER JOIN identity AS ide ON ide.id = inf.identityId
+					INNER JOIN location AS loc ON loc.id = inf.locationId
+					WHERE loc.id = :locId AND
+					igpop.postDate >= :postDate
+					GROUP BY igpop.yt_user_id ORDER BY igpop.score DESC, igpop.likeCount DESC LIMIT ".$limit;
 		} else if($type == 'IG') {
 			$sql = "SELECT igpop.ig_post_id, igpop.ig_user_id, igpop.score, loc.id AS locationId, inf.id AS influencerId,
 					igpop.content, igpop.likeCount, igpop.commentCount,
@@ -726,6 +889,8 @@ class Influencer extends CoreModel
 		$socialId = $this->ig_id;
 		if($type == "FB"){
 			$socialId = $this->fb_id;
+		} elseif ($type == "YT") {
+			$socialId = $this->yt_id;
 		}
 
 		$updatedAt = time();
@@ -777,7 +942,19 @@ class Influencer extends CoreModel
 					WHERE loc.id = :locId AND ide.id = :identityId  AND
 					igpop.postDate >= :postDate
 					GROUP BY igpop.fb_user_id ORDER BY igpop.score DESC, igpop.likeCount DESC LIMIT ".$limit;
-		}else{
+		} elseif($type == "YT") {
+			$sql = "SELECT igpop.yt_post_id, igpop.yt_user_id, igpop.score, loc.id AS locationId, inf.id AS influencerId,
+					igpop.content, igpop.likeCount, igpop.commentCount,
+					igpop.pictureUrl, igpop.postDate
+					FROM yt_latest_post AS igpop
+					INNER JOIN yt_user AS igu ON igu.id = igpop.yt_user_id
+					INNER JOIN influencer AS inf ON inf.yt_user_id = igu.id
+					INNER JOIN identity AS ide ON ide.id = inf.identityId
+					INNER JOIN location AS loc ON loc.id = inf.locationId
+					WHERE loc.id = :locId AND ide.id = :identityId  AND
+					igpop.postDate >= :postDate
+					GROUP BY igpop.yt_user_id ORDER BY igpop.score DESC, igpop.likeCount DESC LIMIT ".$limit;
+		} else{
 			$sql = "SELECT igpop.ig_post_id, igpop.ig_user_id, igpop.score, loc.id AS locationId, inf.id AS influencerId,
 				igpop.content, igpop.likeCount, igpop.commentCount,
 				igpop.pictureUrl, igpop.videoUrl, igpop.link, igpop.postDate
@@ -797,6 +974,8 @@ class Influencer extends CoreModel
 		$socialId = $this->ig_id;
 		if($type == "FB"){
 			$socialId = $this->fb_id;
+		} elseif ($type == "YT") {
+			$socialId = $this->yt_id;
 		}
 		$this->clearTopPost($socialId, $loc_id, "IDENTITY", $identity_id);
 
@@ -823,6 +1002,21 @@ class Influencer extends CoreModel
 					WHERE loc.id = :loc_id AND cat.id = :catId AND
 					igpop.postDate >= :postDate 
 					GROUP BY igpop.fb_user_id ORDER BY igpop.score DESC, igpop.likeCount DESC  LIMIT ".$limit;
+		} elseif ($type == "YT") {
+			$sql = "SELECT igpop.yt_post_id, igpop.yt_user_id, igpop.score, loc.id AS locationId, inf.id AS influencerId,
+					igpop.content, igpop.likeCount, igpop.commentCount,
+					igpop.pictureUrl, igpop.postDate
+					FROM yt_latest_post AS igpop
+					INNER JOIN yt_user AS igu ON igu.id = igpop.yt_user_id
+					INNER JOIN influencer AS inf ON inf.yt_user_id = igu.id
+					INNER JOIN influencer_interest AS infi ON infi.influencerId = inf.id
+					INNER JOIN category_interest AS cati ON cati.interestId = infi.interestId
+					INNER JOIN category AS cat ON cat.id = cati.categoryId
+					INNER JOIN identity AS ide ON ide.id = inf.identityId
+					INNER JOIN location AS loc ON loc.id = inf.locationId
+					WHERE loc.id = :loc_id AND cat.id = :catId AND
+					igpop.postDate >= :postDate 
+					GROUP BY igpop.yt_user_id ORDER BY igpop.score DESC, igpop.likeCount DESC  LIMIT ".$limit;
 		} else {
 			$sql = "SELECT igpop.ig_post_id, igpop.ig_user_id, igpop.score, loc.id AS locationId, inf.id AS influencerId,
 				igpop.content, igpop.likeCount, igpop.commentCount,
@@ -883,7 +1077,13 @@ class Influencer extends CoreModel
 				`locationId` = :locationId AND
 				`type` = '".$type."' AND
 				`relatedId` = '".$relatedId."'";
-		}else{
+		} elseif ($soicialType == "YT") {
+			$sql = "DELETE FROM top_post
+				WHERE `socialPlatformId` = '".$this->yt_id."' AND
+				`locationId` = :locationId AND
+				`type` = '".$type."' AND
+				`relatedId` = '".$relatedId."'";
+		} else{
 			$sql = "DELETE FROM top_post
 				WHERE `socialPlatformId` = '".$this->ig_id."' AND
 				`locationId` = :locationId AND
@@ -903,6 +1103,9 @@ class Influencer extends CoreModel
 			$socialId = $this->fb_id;
 			$relatedTableId = 'fb_post_id';
 			$videoUrl = null;
+		}
+		if ($socialType == "YT") {
+
 		}
 		$sql = "INSERT INTO `top_post` (
 							`socialPlatformId`,
@@ -1065,6 +1268,7 @@ class Influencer extends CoreModel
 										`locationId`,
 										`ig_user_id`,
 										`fb_user_id`,
+										`yt_user_id`,
 										`user_id`,
 										`verified`,
 										`sourceFrom`,
@@ -1094,6 +1298,7 @@ class Influencer extends CoreModel
 										'".$user['location_id']."',
 										'".$ig_user_id."',
 										'".$fb_user_id."',
+										'".$yt_user_id."',
 										'".$newInfluencerId."',
 										'".$verified."',
 										'".$sourceFrom."',

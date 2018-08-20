@@ -1451,6 +1451,9 @@ class Core
 		if ($type === "FB") {
 			$recentfollowerFieldName = 'fanCount';
 			$followerFieldName = 'fanCount';
+		} elseif ($type === "YT") {
+			$recentfollowerFieldName = 'subscriberCount';
+			$followerFieldName = 'subscriberCount';
 		}
 		//$startTime = 1488214861;
 		//$user[$followerFieldName] = 34014;
@@ -1458,6 +1461,7 @@ class Core
 		$recent14Day = $startTime - (24 * 60 * 60 * 14);
 		$recent21Day = $startTime - (24 * 60 * 60 * 21);
 		$recent28Day = $startTime - (24 * 60 * 60 * 28);
+		// question
 		if ($type === "FB" && $firstLoggedAt < 1483817403) {
 			$firstLoggedAt = 1483817403;
 		}
@@ -1601,6 +1605,9 @@ class Core
 		if ($type === "FB") {
 			$followerFieldName = 'fanCount';
 		}
+		elseif ($type === "YT") {
+			$followerFieldName = 'subscriberCount';
+		}
 		$reach = $user[$followerFieldName];
 		return $reach;
 	}
@@ -1699,7 +1706,10 @@ class Core
 		$followerCount = 0;
 		if ($socialPlatform == "FB") {
 			$followerCount = $user['fanCount'];
-		} else {
+		} elseif ($socialPlatform == "YT") {
+			$followerCount = $user['subscriberCount'];
+		}
+		else {
 			$followerCount = $user['followerCount'];
 		}
 		$totalFollower = $followerCount;
@@ -1754,6 +1764,7 @@ class Core
 
 	public function countInteractionRisingPercentage($user, $recentDay, $recent97Day, $socialPlatform = "IG")
 	{
+		//question
 		if ($socialPlatform == "FB") {
 			$user['oldInteraction'] = 0;
 			if ($user['postCount90']) {

@@ -80,9 +80,84 @@ class UpdateYtUser extends Core
         $this->transferInfluencer = new TransferInfluencerYt($this->location);
         $transferInfluencer->run($infId);
 
-        $genTopInfluencer = new GenTopInfluencer($this->location);
+        /* $genTopInfluencer = new GenTopInfluencer($this->location);
         $genTopInfluencer->run();
-        $this->printLog->log("INFO", "SUCCESS!\nStart time: ".date("Y-m-d h:i:sa", $this->updateUserStartTime)."\nEnd time: ".date("Y-m-d h:i:sa", time())."\nProducing time: " .((time()-$this->updateUserStartTime)/60). "(m)\n");
+        $this->printLog->log("INFO", "SUCCESS!\nStart time: ".date("Y-m-d h:i:sa", $this->updateUserStartTime)."\nEnd time: ".date("Y-m-d h:i:sa", time())."\nProducing time: " .((time()-$this->updateUserStartTime)/60). "(m)\n"); */
+    }
+
+    public function updateUser($key = 0, $user = null) 
+    {
+        $userDetail = parent::getYtUserDetail($user);
+
+        if (!$userDetail) {
+            $this->printLog->log("ERROR", "Get Yt Api Fail");
+            $this->updateYtErrorLog($user['ytId'], 400, 'GET_API_FAILURE', 'Get api failure');
+            $this->failCount++;
+        }
+
+        $userDetail['inf_id'] = $inf_id;
+        $userDetail = parent::getYtUserMediaData($userDetail, $this->updateUserStartTime, "UPDATE_USER");
+        $userDetail['old'] = $user;
+
+        $userDetail['activeness'] = parent::countActiveness($userDetail);
+		$userDetail['interaction'] = parent::countInteraction($userDetail);
+		$userDetail['explosiveness'] = parent::countExplosiveness($userDetail);
+		$userDetail['engagement'] = parent::countEngagement($userDetail['interaction'], $userDetail['subscriberCount']);
+        $userDetail['reach'] = parent::countReach($userDetail);
+        
+        $firstLoggedAt = $this->normalModel->getLastUserLog($userDetail['id'], "YT");
+        $userDetail = parent::countAppeal($userDetail, $this->updateUserStartTime, $firstLoggedAt);
+
+        $userDetail['activenessScore'] = $this->radarScoreCount->getActivenessScore($userDetail['activeness'],'YT');
+		$userDetail['interactionScore'] = $this->radarScoreCount->getInteractionScore($userDetail['interaction'],'YT');
+		$userDetail['explosivenessScore'] = $this->radarScoreCount->getExplosivenessScore($userDetail['explosiveness'],'YT');
+		$userDetail['reachScore'] = $this->radarScoreCount->getReachScore($userDetail['reach'],'YT');
+		$userDetail['appealScore'] = $this->radarScoreCount->getAppealScore($userDetail['appeal'],'YT');
+
+		$userDetail['engagementScore'] = $this->radarScoreCount->getEngagementScore($userDetail['engagement']);
+		$userDetail['infPower'] = round((($userDetail['engagementScore']+$userDetail['interactionScore']+$userDetail['explosivenessScore']+$userDetail['reachScore']+$userDetail['appealScore'])/5), 2);
+    
+        $userDetail = parent::countFollowerRisingPercentage($userDetail, $this->recentDay, $firstLoggedAt, "FB");
+		$userDetail = parent::countInteractionRisingPercentage($userDetail, $this->recentDay, $this->recent97Day, "FB");
+		$userDetail = parent::countEngagementRate($userDetail, $userDetail['oldInteraction'], $userDetail['fanCount']); 
+
+        $this->successCount++;
+        $this->saveUpdatedUser($userDetail,	$this->updateUserStartTime);
+		$this->transferInfluencer->run($inf_id);
+    }
+
+    public function saveUpdatedUser($user, $startTime) 
+    {
+        $this->printLog->log("INFO", "Update Yt User");
+        $this->userModel->update($user);
+        $this->printLog->log("INFO", "Update Yt Post");
+        $this->saveUserPost($user, $startTime);
+        $this->printLog->log("INFO", "Update Yt Post Log");
+        $this->userModel->updateUserLog($user);
+    }
+
+    public function saveUserPost($user, $startTime)
+    {
+        $recentDay = $startTime-(24*60*60*97);
+
+		$userOldPost = $this->postModel->getPostByYtId($user['id'], $recentDay);
+		
+        $userOldPostCount = count($userOldPost);
+        
+        foreach ($user['media'] as $key => $newMedia) {
+            if ($userOldPostCount != 0) {
+                foreach ($userOldPost as $old_key => $oldMedia) {
+                    if ($oldMedia['yt_post_id'] == $newMedia['yt_post_id']) {
+                        $this->postModel->update($oldMedia['id'], $newMedia);
+                        continue 2;
+                    } elseif ($old_key == ($userOldPostCount-1)) {
+                        $this->postModel->insert($user['id'], $newMedia);
+                    }
+                }
+            } else {
+                $this->postModel->insert($user['id'], $newMedia);
+            }
+        }
     }
 }
-?>jjj
+?>

@@ -5,19 +5,18 @@ class DB extends PDO
 	/*** mysql config ***/
 	private $username = 'cloudbreakr';
 	//private $hostname = 'crawl.c2cryczu3cau.ap-southeast-1.rds.amazonaws.com'; //54.254.226.195
-	private $hostname = '192.168.64.2';
-	private $password = 'cloudbreakr';
+	private $hostname = 'crawl.cloudbreakr.com';
 
 	//private $crawl_read_hostname = "crawl-read.cbfboizfnqgg.ap-northeast-1.rds.amazonaws.com";
 	// private $hostname = 'crawl.cloudbreakr.com'; //54.254.226.195
-	// private $password = 'xW9d*7Fn&UdM';
+	private $password = 'xW9d*7Fn&UdM';
 
-	private $dbName = 'myDB';
+	private $dbName = 'cloudbreakr_db2';
 
-	private $new_dbName = 'cloudbreakr_new';
-	private $web_hostname = 'production.c2cryczu3cau.ap-southeast-1.rds.amazonaws.com';
+	private $new_dbName = 'myDB';
+	private $web_hostname = '192.168.64.2';
 	private $web_username = 'cloudbreakr';
-	private $web_password = 'adv1wherepr02o18';
+	private $web_password = 'cloudbreakr';
 
 	private $AUTOHostname = 'automation.c2cryczu3cau.ap-southeast-1.rds.amazonaws.com';
 	private $AUTOusername = 'cloudbreakr';
